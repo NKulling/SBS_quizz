@@ -103,30 +103,37 @@ server <- function(input, output, session) {
   observeEvent(input$submit, {
     req(quiz_data())
     q <- quiz_data()[current_question(), ]
-    correct_genus <- q$genus
-    correct_species <- q$species
-    correct_family <- q$family
     
-    genus_correct <- tolower(input$genus_input) == tolower(correct_genus)
-    species_correct <- tolower(input$species_input) == tolower(correct_species)
-    family_correct <- tolower(input$family_input) == tolower(correct_family)
+    correct_genus <- tolower(q$genus)
+    correct_species <- tolower(q$species)
+    correct_family <- tolower(q$family)
+    
+    user_genus <- tolower(trimws(input$genus_input))
+    user_species <- tolower(trimws(input$species_input))
+    user_family <- tolower(trimws(input$family_input))
+    
+    genus_correct <- user_genus == correct_genus
+    species_correct <- user_species == correct_species
+    family_correct <- user_family == correct_family
     
     points <- sum(genus_correct, species_correct, family_correct)
     score(score() + points)
     
     feedback <- paste(
-      if (genus_correct) "Genus: ✅" else "Genus: ❌",
-      if (species_correct) "Species: ✅" else "Species: ❌",
-      if (family_correct) "Family: ✅" else "Family: ❌",
+      if (genus_correct) "Genus: ✅" else paste0("Genus: ❌ (Correct: ", q$genus, ")"),
+      if (species_correct) "Species: ✅" else paste0("Species: ❌ (Correct: ", q$species, ")"),
+      if (family_correct) "Family: ✅" else paste0("Family: ❌ (Correct: ", q$family, ")"),
       sep = " | "
     )
+    
     showNotification(feedback, type = ifelse(points == 3, "message", "error"))
     
+    # If answer is wrong, add it to the incorrect answers list
     if (!genus_correct | !species_correct | !family_correct) {
-      incorrect_list(rbind(incorrect_list(), data.frame(Genus = correct_genus, Species = correct_species, Family = correct_family)))
+      incorrect_list(rbind(incorrect_list(), data.frame(Genus = q$genus, Species = q$species, Family = q$family)))
     }
     
-    # Move to next question
+    # Move to next question, unless it's the last one
     if (current_question() < nrow(quiz_data())) {
       current_question(current_question() + 1)
     } else {
@@ -142,6 +149,7 @@ server <- function(input, output, session) {
   
   # Display Incorrect Answers Table
   output$incorrect_answers <- renderTable({
+    req(quiz_over())  # Ensure table appears only at the end
     incorrect_list()
   })
   
