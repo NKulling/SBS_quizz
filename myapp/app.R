@@ -2,7 +2,7 @@
 library(shiny)
 library(dplyr)
 
-# Load dataset (Assuming "data.csv" is in the working directory)
+#load dataset
 data <- read.csv("data/data_formatted.csv")
 
 
@@ -12,7 +12,7 @@ ui <- fluidPage(
   sidebarLayout(
     sidebarPanel(
       h4("Quiz Settings"),
-      radioButtons("source", "Select Data Source:", choices = c("200 only" = "200", "200 & 400" = "all")),
+      radioButtons("source", "Select SBS choice:", choices = c("200 only" = "200", "200 & 400" = "all")),
       selectInput("family", "Choose a Family:", choices = NULL),
       numericInput("num_questions", "Number of Questions:", value = 10, min = 5, max = 200),
       actionButton("start", "Start Quiz"),
